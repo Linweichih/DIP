@@ -35,13 +35,25 @@ imshow(I_component);
 title('I component image')
 
 %% Figures of RGB based (15%) and HSI based (15%) sharpened images and their  difference image (10%)
-lap_kernal = [-1 -1 -1;
+lap_kernal = [  -1 -1 -1;
                 -1 8 -1;
                 -1 -1 -1];
 % RGB filter filter each channel
-
+Im_RGB_filter_process = Im + cat(3,filter2(lap_kernal,R_component),...
+                                    filter2(lap_kernal,G_component),...
+                                    filter2(lap_kernal,B_component));
+figure('Name','Figures of RGB based and HSI based sharpened images and their difference image','NumberTitle','off');
+subplot(1,3,1);
+imshow(Im_RGB_filter_process);
+title('RGB based sharpened image')
 % HSI filter filter Intensity component 
-
+Im_HSI_filter_process = cat(3,filter2(lap_kernal,H_component) + H_component,...
+                            filter2(lap_kernal,S_component) + S_component,...
+                            filter2(lap_kernal,I_component)+I_component);
+Im_HSI_filter_process = hsi2rgb(Im_HSI_filter_process);
+subplot(1,3,2);
+imshow(Im_HSI_filter_process);
+title('HSI based sharpened image')
 % difference
 
 %% function of hsi2rgb and rgb2hsi
@@ -49,7 +61,6 @@ function HSI = rgb2hsi(rgb)
     R_component = rgb(:,:,1);
     G_component = rgb(:,:,2);
     B_component = rgb(:,:,3);
-
 
     %Hue 
     child = 1/2*((R_component-G_component)+(R_component-B_component));
@@ -65,6 +76,15 @@ function HSI = rgb2hsi(rgb)
     HSI = cat(3,H_component,S_component,I_component);
 end
 function rgb = hsi2rgb(hsi)
+    H_component = hsi(:,:,1);
+    S_component = hsi(:,:,2);
+    I_component = hsi(:,:,3);
+    H_component = H_component * 360;
+    B(H_component<120)=I_component(H_component<120).*(1-S_component(H_component<120));  
+    R(H_component<120)=I_component(H_component<120).*(1+((S1(H_component<120).*cosd(H_component(H_component<120)))./cosd(60-H_component(H_component<120))));  
+    G(H_component<120)=3.*I_component(H_component<120)-(R(H_component<120)+B(H_component<120)); 
+    
+    rgb = cat(3,R,G,B);
     
 end
 
