@@ -8,6 +8,14 @@ Im = im2double(Im);
 
 %% Figures of R, G, B, H , S and I component images
 HSI = rgb2hsi(Im);
+Im_pr = hsi2rgb(HSI);
+Im_pr = im2uint8(Im_pr);
+%inverse rgb hsi test
+% figure;
+% subplot(1,2,1);
+% imshow(Im_pr);
+% subplot(1,2,2);
+% imshow(Im);
 R_component = Im(:,:,1);
 G_component = Im(:,:,2);
 B_component = Im(:,:,3);
@@ -47,15 +55,18 @@ subplot(1,3,1);
 imshow(Im_RGB_filter_process);
 title('RGB based sharpened image')
 % HSI filter filter Intensity component 
-Im_HSI_filter_process = cat(3,filter2(lap_kernal,H_component) + H_component,...
-                            filter2(lap_kernal,S_component) + S_component,...
-                            filter2(lap_kernal,I_component)+I_component);
+Im_HSI_filter_process = cat(3,H_component, S_component, filter2(lap_kernal,I_component)+I_component);
 Im_HSI_filter_process = hsi2rgb(Im_HSI_filter_process);
 subplot(1,3,2);
 imshow(Im_HSI_filter_process);
 title('HSI based sharpened image')
 % difference
-
+subplot(1,3,3);
+Im_diff = Im_HSI_filter_process - Im_RGB_filter_process;
+Im_diff = rgb2gray(Im_diff);
+Im_diff = mat2gray(Im_diff);
+imshow(Im_diff);
+title('Difference image')
 %% function of hsi2rgb and rgb2hsi
 function HSI = rgb2hsi(rgb)
     R_component = rgb(:,:,1);
@@ -80,11 +91,28 @@ function rgb = hsi2rgb(hsi)
     S_component = hsi(:,:,2);
     I_component = hsi(:,:,3);
     H_component = H_component * 360;
+    R=zeros(size(H_component));  
+    G=zeros(size(H_component));  
+    B=zeros(size(H_component)); 
+    
+    %RG Sector(0<=H<120)  
     B(H_component<120)=I_component(H_component<120).*(1-S_component(H_component<120));  
-    R(H_component<120)=I_component(H_component<120).*(1+((S1(H_component<120).*cosd(H_component(H_component<120)))./cosd(60-H_component(H_component<120))));  
+    R(H_component<120)=I_component(H_component<120).*(1+((S_component(H_component<120).*cosd(H_component(H_component<120)))./cosd(60-H_component(H_component<120))));  
     G(H_component<120)=3.*I_component(H_component<120)-(R(H_component<120)+B(H_component<120)); 
     
+    %GB Sector(120<=H<240) 
+    H_2 = H_component-120;
+    R(H_component>=120&H_component<240)=I_component(H_component>=120&H_component<240).*(1-S_component(H_component>=120&H_component<240));  
+    G(H_component>=120&H_component<240)=I_component(H_component>=120&H_component<240).*(1+((S_component(H_component>=120&H_component<240).*cosd(H_2(H_component>=120&H_component<240)))./cosd(60-H_2(H_component>=120&H_component<240))));  
+    B(H_component>=120&H_component<240)=3.*I_component(H_component>=120&H_component<240)-(R(H_component>=120&H_component<240)+G(H_component>=120&H_component<240));  
+    
+    % BR Sector(240<=H<=360)  
+    H_2 = H_component-240;
+    G(H_component>=240&H_component<=360)=I_component(H_component>=240&H_component<=360).*(1-S_component(H_component>=240&H_component<=360));  
+    B(H_component>=240&H_component<=360)=I_component(H_component>=240&H_component<=360).*(1+((S_component(H_component>=240&H_component<=360).*cosd(H_2(H_component>=240&H_component<=360)))./cosd(60-H_2(H_component>=240&H_component<=360))));  
+    R(H_component>=240&H_component<=360)=3.*I_component(H_component>=240&H_component<=360)-(G(H_component>=240&H_component<=360)+B(H_component>=240&H_component<=360)); 
     rgb = cat(3,R,G,B);
+    
     
 end
 
