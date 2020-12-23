@@ -11,8 +11,13 @@ Im = imread('fruit on tree.tif');
 %% extract R component and Plot of the curve of between-class variance depending on all possible threshold values
 R_Im = Im(:,:,1);
 K = 256;
-counts = imhist(Im,K);
-p = counts / sum(counts);
+cts = zeros(K,1);
+for i = 1:w
+    for j = 1:h
+        cts(R_Im(i,j)+1) = cts(R_Im(i,j)+1) + 1;
+    end
+end
+p = cts / sum(cts);
 between_class_var = zeros(K,1);
 varB = zeros(K,1);
 for k = 1:K-1
@@ -25,16 +30,13 @@ end
 figure('Name','The curve of between-class variance','NumberTitle','off')
 axes = plot(between_class_var);
 title('The curve of between-class variance')
-axis([0 256 0 3000])
+axis([0 256 0 4500])
 legend('between-class variance')
 
 %% Image of patterns extracted by Otsu algorithm (plotted in the same way as the color-slicing example shown below)
 index = find(between_class_var == max(between_class_var));
 new_filter_R = zeros(size(R_Im));
-level=graythresh(R_Im);
-bw1 = imbinarize(R_Im,level);
-%imshow(bw1)
-bw = imbinarize(R_Im,index/(K-1));
+bw = imbinarize(R_Im,(index-1)/(K-1));
 bw = double(bw);
 %imshow(bw)
 filter_Im = zeros(size(Im));
@@ -74,4 +76,3 @@ for T = threshold
     imshow(filter_Im);
     title('Images of patterns extracted by K-means clustering with threshold value='+string(T))
 end
-
